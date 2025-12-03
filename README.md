@@ -27,7 +27,7 @@
 ### 1. 克隆项目
 
 ```bash
-git clone [https://github.com/你的用户名/threejs-showcase.git](https://github.com/你的用户名/threejs-showcase.git)
+git clone git@github.com:CQUPTLei/threejs-showcase.git
 cd threejs-showcase
 ````
 
