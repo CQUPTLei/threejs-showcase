@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Three.js 视觉实验室</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+      body {
+        overflow: hidden; 
+        background: #000;
+        font-family: 'Microsoft YaHei', sans-serif; /* 确保中文显示更好看 */
+      }
+      #canvas-container {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100vh;
+        z-index: 0;
+      }
+      #ui-layer {
+        position: relative;
+        z-index: 10;
+        height: 100vh;
+        display: flex;
+        flex-direction: column;
+        pointer-events: none;
+      }
+      
+      /* --- 动画核心设置 --- */
+      .header-container {
+        /* duration 从 1s 改为 2.5s，动作极慢，非常优雅 */
+        transition: all 2.5s cubic-bezier(0.25, 1, 0.5, 1);
+      }
+
+      .header-initial {
+        flex-grow: 1;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        background: rgba(0,0,0,0.4); /* 背景稍微深一点，让字更清晰 */
+      }
+      
+      /* 缩小后的状态 */
+      .header-minimized {
+        flex-grow: 0;
+        height: 120px;
+        padding: 2rem;
+        align-items: flex-start; /* 靠左对齐 */
+        background: linear-gradient(to bottom, rgba(0,0,0,0.9), transparent);
+      }
+      .header-minimized h1 {
+        font-size: 2.5rem; /* 缩小后的字号 */
+      }
+      .header-minimized p {
+        opacity: 0;
+        height: 0;
+        margin: 0;
+        overflow: hidden;
+      }
+
+      /* 底部卡片区 */
+      .cards-section {
+        pointer-events: auto;
+        background: linear-gradient(to top, rgba(0,0,0,1), rgba(0,0,0,0));
+        padding-bottom: 2rem;
+        padding-top: 5rem;
+      }
+
+      .demo-card {
+        transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        opacity: 0.5;
+        transform: scale(0.95);
+        border: 1px solid rgba(255,255,255,0.1);
+        background: rgba(255,255,255,0.05);
+      }
+      .demo-card:hover {
+        opacity: 0.8;
+        transform: scale(1);
+        background: rgba(255,255,255,0.1);
+      }
+      /* 激活高亮状态 */
+      .demo-card.active {
+        opacity: 1;
+        transform: scale(1.1) translateY(-15px);
+        background: rgba(255,255,255,0.15);
+        border-color: rgba(255,255,255,0.9);
+        box-shadow: 0 15px 40px -10px rgba(0,0,0,0.8);
+        z-index: 20;
+      }
+      
+      /* 各个卡片的专属光晕颜色 */
+      .demo-card[data-demo="galaxy"].active { box-shadow: 0 0 30px rgba(59, 130, 246, 0.6); border-color: #60a5fa; }
+      .demo-card[data-demo="waves"].active { box-shadow: 0 0 30px rgba(6, 182, 212, 0.6); border-color: #22d3ee; }
+      .demo-card[data-demo="metal"].active { box-shadow: 0 0 30px rgba(234, 179, 8, 0.6); border-color: #facc15; }
+      .demo-card[data-demo="torus"].active { box-shadow: 0 0 30px rgba(168, 85, 247, 0.6); border-color: #c084fc; }
+      .demo-card[data-demo="crystals"].active { box-shadow: 0 0 30px rgba(34, 197, 94, 0.6); border-color: #4ade80; }
+
+    </style>
+  </head>
+  <body class="text-white antialiased">
+    
+    <div id="canvas-container"></div>
+
+    <div id="ui-layer">
+      <header id="main-header" class="header-container header-initial">
+        <h1 class="text-6xl md:text-8xl font-bold tracking-tighter bg-clip-text text-transparent bg-gradient-to-r from-blue-400 via-purple-500 to-pink-500 drop-shadow-2xl">
+          视觉实验室
+        </h1>
+        <p class="mt-6 text-gray-200 text-xl md:text-2xl text-center font-light tracking-widest" style="text-shadow: 0 2px 4px rgba(0,0,0,0.5);">
+          向下滚动 · 探索 3D 视界
+        </p>
+      </header>
+
+      <section class="cards-section mt-auto px-4 md:px-8">
+        <div class="max-w-7xl mx-auto">
+          <div class="grid grid-cols-5 gap-3 md:gap-6">
+            
+            <div data-demo="galaxy" class="demo-card cursor-pointer group p-2 md:p-4 rounded-xl backdrop-blur-md">
+              <div class="h-12 md:h-16 flex items-center justify-center text-2xl md:text-4xl">🌌</div>
+              <h3 class="font-bold text-center text-xs md:text-lg mt-2 text-blue-200">星系粒子</h3>
+            </div>
+
+            <div data-demo="waves" class="demo-card cursor-pointer group p-2 md:p-4 rounded-xl backdrop-blur-md">
+              <div class="h-12 md:h-16 flex items-center justify-center text-2xl md:text-4xl">🌊</div>
+              <h3 class="font-bold text-center text-xs md:text-lg mt-2 text-cyan-200">赛博海洋</h3>
+            </div>
+
+            <div data-demo="metal" class="demo-card cursor-pointer group p-2 md:p-4 rounded-xl backdrop-blur-md">
+              <div class="h-12 md:h-16 flex items-center justify-center text-2xl md:text-4xl">🔮</div>
+              <h3 class="font-bold text-center text-xs md:text-lg mt-2 text-yellow-200">液态金属</h3>
+            </div>
+
+            <div data-demo="torus" class="demo-card cursor-pointer group p-2 md:p-4 rounded-xl backdrop-blur-md">
+              <div class="h-12 md:h-16 flex items-center justify-center text-2xl md:text-4xl">🍩</div>
+              <h3 class="font-bold text-center text-xs md:text-lg mt-2 text-purple-200">霓虹通道</h3>
+            </div>
+
+            <div data-demo="crystals" class="demo-card cursor-pointer group p-2 md:p-4 rounded-xl backdrop-blur-md">
+              <div class="h-12 md:h-16 flex items-center justify-center text-2xl md:text-4xl">💎</div>
+              <h3 class="font-bold text-center text-xs md:text-lg mt-2 text-green-200">悬浮晶体</h3>
+            </div>
+
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <script type="module" src="/src/main.js"></script>
+  </body>
+</html>
